@@ -1,0 +1,386 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SHI 기계(MACHINE) 통합 현황</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+@font-face{font-family:'Pretendard';src:local('Pretendard');}
+*{box-sizing:border-box}:root{color-scheme:light}
+body{margin:0;font-family:'Pretendard','Malgun Gothic',-apple-system,sans-serif;background:#f4f5f9;color:#1c2033}
+.wrap{max-width:1320px;margin:0 auto;padding:22px 20px 60px}
+.hd{position:relative;background:linear-gradient(120deg,#10233f,#25406e);color:#fff;border-radius:16px;padding:22px 26px;margin-bottom:18px}
+.hd h1{margin:0;font-size:21px}.hd p{margin:6px 0 0;font-size:13px;opacity:.82}
+.lang{position:absolute;top:16px;right:18px;display:flex;gap:5px}
+.lang button{border:0;background:rgba(255,255,255,.16);color:#fff;padding:6px 13px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit}
+.lang button.on{background:#fff;color:#25406e;font-weight:700}
+.seg{display:inline-flex;background:#fff;border:1.5px solid #dfe2ee;border-radius:10px;overflow:hidden;margin:0 8px 12px 0}
+.seg button{border:0;background:#fff;padding:9px 15px;font-size:13px;cursor:pointer;color:#5a607a;font-family:inherit}
+.seg button.on{background:#25406e;color:#fff;font-weight:700}
+.sc{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:11px;margin-bottom:18px}
+.sc>div{background:#fff;border:1px solid #e7e9f2;border-radius:12px;padding:14px 16px;border-top:3px solid #25406e}
+.sc .l{font-size:12px;color:#7a80a0;margin-bottom:7px;font-weight:600}
+.sc .v{font-size:20px;font-weight:800;color:#12294c}
+.sc .v small{font-size:12px;color:#8890ad;font-weight:600;display:block;margin-top:3px}
+.panel{background:#fff;border:1px solid #e7e9f2;border-radius:13px;padding:16px 18px;margin-bottom:16px}
+.panel h3{margin:0 0 6px;font-size:14.5px;color:#20233a}
+.pn{font-size:11.5px;color:#9298b5;margin:0 0 12px}
+.panelhd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px;flex-wrap:wrap}
+.panelhd h3{margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:8px 9px;text-align:left;border-bottom:1px solid #eef0f6;white-space:nowrap}
+th{background:#12294c;color:#fff;font-weight:700;position:sticky;top:0;font-size:11.5px}
+td.r,th.r{text-align:right}
+.mcell{display:flex;justify-content:space-between;gap:14px;align-items:baseline}
+.mcell b{font-weight:700}.mcell span{color:#9aa3b8;font-size:11px}
+.tbwrap{max-height:560px;overflow:auto;border:1px solid #eef0f6;border-radius:10px}
+.mtot td{background:#dbe4f0 !important;font-weight:700}
+.tag{font-size:10.5px;padding:2px 7px;border-radius:5px;font-weight:700}
+.t1{background:#eef4ff;color:#2563a8}.t2{background:#eafaf1;color:#1c8b52}
+.dv{color:#1c8b52;font-weight:700}.nd{color:#c2650a;font-weight:700}.pg{color:#8a63d2;font-weight:700}
+.mg-pos{color:#1c8b52;font-weight:700}.mg-neg{color:#d23b3b;font-weight:700}
+.xlb{border:1.5px solid #12294c;background:#12294c;color:#fff;border-radius:8px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.xlb:hover{opacity:.9}
+.nmw{max-width:300px;overflow:hidden;text-overflow:ellipsis}
+.lk{color:#25406e;font-weight:700;cursor:pointer;text-decoration:underline}
+#modal{display:none;position:fixed;inset:0;background:rgba(18,25,45,.5);z-index:100;align-items:flex-start;justify-content:center;padding:38px 18px;overflow:auto}
+#mbox{background:#fff;border-radius:14px;max-width:1180px;width:100%;padding:20px 22px;box-shadow:0 24px 70px rgba(0,0,0,.32)}
+#chtt{position:absolute;pointer-events:none;background:rgba(18,23,40,.94);color:#fff;border-radius:9px;padding:10px 12px;font-size:11.5px;line-height:1.55;z-index:60;opacity:0;transition:opacity .08s;max-width:none;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+</style></head>
+<body><div class="wrap">
+<div class="hd"><div class="lang"><button id="lko" class="on" onclick="setLang('ko')">한국어</button><button id="len" onclick="setLang('en')">ENG</button></div>
+<h1 id="ttl"></h1><p id="sub"></p><div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px"><button id="xlAllBtn" onclick="xlALL()" style="border:1.5px solid #1D6F42;background:#1D6F42;color:#fff;border-radius:12px;padding:11px 22px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">⬇ 통합내역 Excel 다운로드</button><a href="https://shi-dashboard.github.io/monitoring/item-history.html" target="_blank" style="text-decoration:none;background:#1F3864;color:#fff;border:1.5px solid #1F3864;border-radius:12px;padding:11px 22px;font-size:17px;font-weight:700;white-space:nowrap;display:inline-block">🔎 품목 거래 히스토리</a></div></div>
+<div id="srcbar"></div>
+<div class="sc" id="cards"></div>
+<div class="panel"><div class="panelhd"><div><h3 id="h_po"></h3><div class="pn" id="pn_po"></div></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span id="dlvbar"></span><span id="xstat" style="font-size:11px;color:#8890ad"></span></div></div>
+ <div id="pomtab" style="margin-bottom:10px"></div>
+ <div class="tbwrap"><table id="potab"></table></div></div>
+<div class="panel"><div class="panelhd"><div><h3 id="h_mon"></h3><div class="pn" id="pn_mon"></div></div></div><div id="chartCtrl" style="margin:0 0 12px"></div><div style="position:relative;height:270px"><canvas id="chart"></canvas></div></div>
+<div class="grid2">
+ <div class="panel"><h3 id="h_brand"></h3><div class="tbwrap" style="max-height:320px"><table id="brandtab"></table></div></div>
+ <div class="panel"><h3 id="h_cust"></h3><div class="tbwrap" style="max-height:320px"><table id="custtab"></table></div></div>
+</div>
+<div class="panel"><div class="panelhd"><div><h3 id="h_rfq"></h3><div class="pn" id="pn_rfq"></div></div><div style="display:flex;gap:8px;align-items:center"><span id="xstat2" style="font-size:11px;color:#8890ad"></span></div></div>
+ <div class="tbwrap" style="max-height:440px"><table id="rfqtab"></table></div></div>
+</div>
+<div id="modal" onclick="if(event.target===this)closeModal()"><div id="mbox"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div id="modalTitle" style="font-size:17px;font-weight:800;color:#12294c"></div><button class="xlb" onclick="closeModal()" style="background:#fff;color:#25406e;border-color:#dfe2ee">✕ <span id="mclose"></span></button></div><div id="modalBody"></div></div></div>
+<script>
+const RATE=16350.0, PO=[["비관계사","PT. HANKOOK TIRE INDONESIA","PT. HANKOOK TIRE INDONESIA","2025.11","2025-11-21","PO251100854","ECO LASER","PORTABLE LASER CLEANING MACHINE / V-300LC",1.0,"UNT",724327800,909283000,0.2034,909283000,"2025-12-16","",25.0,"ECO LASER CO., LTD","INDONESIA","","2025-02-12"],["비관계사","PT. HANKOOK TIRE INDONESIA","PT. HANKOOK TIRE INDONESIA","2025.11","2025-11-21","PO251100854","ECO LASER","PROTECTIVE LENS CLEAR FOR MACHINE LASER",20.0,"EA",260608,300000,0.1313,6000000,"2025-12-16","",25.0,"ECO LASER CO., LTD","INDONESIA","","2025-02-12"],["비관계사","PT. Y-C TEC INDONESIA","Y-C TEC INDONESIA, PT","2026.05","2026-05-30","311/PO-YC TEC/IV/2026","ECO LASER","LASER CLEANING MACHINE V-205LC",1.0,"EA",573984000,782328000,0.2663,782328000,"2026-07-03","",34.0,"ECO LASER CO., LTD","KOREA","","2026-03-15"],["비관계사","PT. SENG DAM JAYA ABADI","PT. SENG DAM JAYA ABADI","2026.06","2026-06-25","SHC0626-061","ECO LASER","LASER CLEANING MACHINE V-200LC",1.0,"EA",523200000,722670000,0.276,722670000,"2026-07-15","",20.0,"ECO LASER CO., LTD","KOREA","","2026-03-15"],["비관계사","ECO-LASER.,CO.LTD.","ECO-LASER.,CO.LTD.","2026.02","2026-02-25","ECO-20260225-P1510","ECO LASER","LASER CLEANING MACHINE V-200LC",1.0,"EA",32000,32000,0.0,32000,"2026-03-04","",7.0,"ECO LASER CO., LTD","KOREA","","2026-03-15"],["비관계사","PT. KUM KANG TECH INDONESIA","PT. KUM KANG TECH INDONESIA","2026.03","2026-03-13","TRCH 26031201 HM","ECO LASER","MACHINE MOLD CLEANER - ECO LASER / V-200 LC/ INCLUDING PROTECTIVE LENS / 200 WATT",1.0,"EA",573984000,741543400,0.226,741543400,"2026-06-09","",88.0,"ECO LASER CO., LTD","KOREA","","2026-03-15"],["비관계사","PT. SENG DAM JAYA ABADI","PT. SENG DAM JAYA ABADI","2026.06","2026-06-25","SHC0626-061","ECO LASER","LASER CLEANING MACHINE V-200LC",1.0,"EA",32000,44200,0.276,44200,"2026-07-15","",20.0,"ECO LASER CO., LTD","KOREA","","2026-03-15"],["비관계사","PT. TKG TAEKWANG INDONESIA","PT. TKG TAEKWANG INDONESIA","2026.07","2026-07-10","456294","NO BRAND","REGULATOR CO2 HEATER",5.0,"EA",345000,347000,0.0058,1735000,"2026-07-28","",18.0,"PT. MITRA GEMILANG SUKSES","INDONESIA","","2026-07-12"],["비관계사","PT. HANDAL SUKSES KARYA","PT. HANDAL SUKSES KARYA","2026.07","2026-07-11","0969/LO-HSK/2026","ECO LASER","MACHINE MOLD CLEANER ECO-LACER / V-205LC / 200 WATT",1.0,"EA",573984000,752220000,0.2369,752220000,"2026-08-19","",39.0,"ECO LASER CO., LTD","KOREA","","2026-03-15"],["비관계사","PT. JYL TRADE INDONESIA","PT. JYL TRADE INDONESIA","2026.08","2026-08-14","20260813002","JYL","DOUBLE NEEDLE POST BED SEWING MACHINE JYL-T5-2C",50.0,"EA",0,37865100,null,1893255000,"","X",null,"","","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.01","2026-01-06","4501043890","SHENGDA","[G] SHENGDA/SOLE ROUGHING MACHINE SD-505/NO SIZE/NO COLOR",1.0,"SET",null,0,null,0,"","",null,"CLOSED","","Trial Machine. Processed under System",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.01","2026-01-15","4501048256","DKSH","MOVING DIE RHEOMETER",1.0,"SET",2279000000,2441880000,0.0667,2441880000,"2026-06-09","",145.0,"PT. DKSH MARKET EXPANSION SERVICES INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.03","2026-03-28","4501084391","JMK","BRUSH CLEANING DEVICE MACHINE-GII (JMK-BCD-GII)",1.0,"SET",80000000,89225000,0.1034,89225000,"2026-05-22","",55.0,"PT. JINWOO MEGA KARYA","DO","",""],["공무","PT. CHANGSHIN REKSA JAYA","CRJ","2026.03","2026-03-30","4501084404","JMK","BRUSH CLEANING DEVICE MACHINE-GII (JMK-BCD-GII)",1.0,"SET",80000000,89225000,0.1034,89225000,"2026-06-26","",88.0,"PT. JINWOO MEGA KARYA","DO","",""],["공무","PT. CHANGSHIN REKSA JAYA","CRJ","2026.03","2026-03-31","4501084426","GOTECH","DESK TYPE TEMP AND HUMID TESTER GT-7005-AT2 MCH8661515",1.0,"SET",228000000,245100000,0.0698,245100000,"2026-08-14","",136.0,"PT. KAWAN LAMA SOLUSI","DO","",""],["공무","PT. CHANGSHIN REKSA JAYA","CRJ","2026.03","2026-03-31","4501084411","GOTECH","BALLY LEATHER FLEX TESTER 12 ST GT-7071-B MCH8661514",1.0,"SET",79744000,91082600,0.1245,91082600,"2026-08-14","",136.0,"PT. KAWAN LAMA SOLUSI","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.04","2026-04-22","4501096869","JYL","INDUSTRIAL SEWING MACHINE JYL-T5-2C",1.0,"SET",27141840,35840700,0.2427,35840700,"2026-04-23","",1.0,"PT. JYL TRADE INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.04","2026-04-22","4501096869","JYL","INDUSTRIAL SEWING MACHINE JYL-T5-2C",1.0,"SET",27141840,35840700,0.2427,35840700,"2026-04-23","",1.0,"PT. JYL TRADE INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.04","2026-04-28","4501100398","JYL","INDUSTRIAL SEWING MACHINE JYL-120",1.0,"SET",5311850,10240200,0.4813,10240200,"2026-04-29","",1.0,"PT. JYL TRADE INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.04","2026-04-28","4501100398","JYL","INDUSTRIAL SEWING MACHINE JYL-L5845E",1.0,"SET",18505800,25600500,0.2771,25600500,"2026-04-29","",1.0,"PT. JYL TRADE INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.04","2026-04-28","4501100398","JYL","INDUSTRIAL SEWING MACHINE JYL-T6-1CQ",1.0,"SET",26045200,34134000,0.237,34134000,"2026-04-29","",1.0,"PT. JYL TRADE INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.04","2026-04-28","4501100398","JYL","INDUSTRIAL SEWING MACHINE JYL-T3-2C",1.0,"SET",14222050,20480400,0.3056,20480400,"2026-04-29","",1.0,"PT. JYL TRADE INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.04","2026-04-28","4501100398","JYL","INDUSTRIAL SEWING MACHINE JYL-1530BFT-CO",1.0,"SET",14222050,17067000,0.1667,17067000,"2026-04-29","",1.0,"PT. JYL TRADE INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.04","2026-04-28","4501100398","JYL","INDUSTRIAL SEWING MACHINE JYL-1452",1.0,"SET",30500300,40960800,0.2554,40960800,"2026-04-29","",1.0,"PT. JYL TRADE INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.04","2026-04-28","4501100398","JYL","INDUSTRIAL SEWING MACHINE JYL-801-C",1.0,"SET",16278250,20480400,0.2052,20480400,"2026-04-29","",1.0,"PT. JYL TRADE INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.04","2026-04-28","4501100398","JYL","INDUSTRIAL SEWING MACHINE JYL-168/6",1.0,"SET",57916300,76801500,0.2459,76801500,"2026-04-29","",1.0,"PT. JYL TRADE INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.05","2026-05-13","4501107348","JYL","EQUIPMENT STITCHING (SINGLE NEEDLE POST-BED SEWING MACHINE JYL-T3-1C)",190.0,"SET",12703950,15859500,0.199,3013305000,"2026-07-02","",50.0,"GUANGDONG JIN YUE LAI AUTOMATION EQUIPMENT CO.. LTD.","CHINA","",""],["공무","PT. CHANGSHIN REKSA JAYA","CRJ","2026.05","2026-05-16","4501109641","JYL","EQUIPMENT STITCHING (SINGLE NEEDLE POST-BED SEWING MACHINE JYL-T3-1C)",414.0,"SET",12703950,15859500,0.199,6565833000,"2026-07-02","",47.0,"GUANGDONG JIN YUE LAI AUTOMATION EQUIPMENT CO.. LTD.","CHINA","",""],["공무","PT. CHANGSHIN REKSA JAYA","CRJ","2026.05","2026-05-16","4501109641","JYL","EQUIPMENT STITCHING (DOUBLE NEEDLE POST-BED SEWING MACHINE JYL-T5-2C)",310.0,"SET",25097250,33304950,0.2464,10324534500,"2026-07-17","",62.0,"GUANGDONG JIN YUE LAI AUTOMATION EQUIPMENT CO.. LTD.","CHINA","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.05","2026-05-19","4501110506","JYL","EQUIPMENT STITCHING (DOUBLE NEEDLE POST-BED SEWING MACHINE JYL-T5-2C)",100.0,"SET",25097250,33304950,0.2464,3330495000,"2026-08-03","",76.0,"GUANGDONG JIN YUE LAI AUTOMATION EQUIPMENT CO.. LTD.","CHINA","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.05","2026-05-19","4501110337","RJC","AIR COOLED CHILLER RJC-AC20A",1.0,"SET",175750000,215000000,0.1826,215000000,"2026-05-22","",3.0,"PT. JINHAILI INTERNATIONAL INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.05","2026-05-19","4501110468","EMMA","EMMA SMART CUTTING MACHINE L2-6716-DS PLUS",3.0,"SET",1062750000,1332525000,0.2025,3997575000,"2026-07-17","",59.0,"DONGGUAN EMMA CNC TECHNOLOGY CO.. LTD","CHINA","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.05","2026-05-19","4501110468","EMMA","EMMA LEATHER NESTING MACHINE PN-3216-ES",1.0,"SET",621300000,686700000,0.0952,686700000,"2026-07-16","",58.0,"DONGGUAN EMMA CNC TECHNOLOGY CO.. LTD","CHINA","",""],["공무","PT. CHANGSHIN REKSA JAYA","CRJ","2026.06","2026-06-12","4501125038","JYL","COMPUTER STITCHING MACHINE JYL-B6040G-CS",11.0,"SET",138231729,228900000,0.3961,2517900000,"2026-07-02","",20.0,"GUANGDONG JIN YUE LAI AUTOMATION EQUIPMENT CO.. LTD","CHINA","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.07","2026-07-17","4501141423","NO BRAND","FREEZING WATER BASED GLUE MACHINE CS-903",1.0,"SET",96535800,125545000,0.2311,125545000,"2026-07-21","",4.0,"PT. JINHAILI INTERNATIONAL INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.08","2026-08-11","4501155082","TAIFENG","AIR COOLED CHILLER TGF8-200W-5S35",1.0,"SET",1328062950,1427668000,0.0698,1427668000,"","X",null,"PT. JINHAILI INTERNATIONAL INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.08","2026-08-14","4501156518","NO BRAND (CUSTOM)","CONVEYOR HEATER JP-361",23.0,"SET",32000000,34400000,0.0698,791200000,"2026-09-11","",28.0,"PT. JINHAILI INTERNATIONAL INDONESIA","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.08","2026-08-24","4501162435","JMK","EQUIPMENT CLEANING (OR WASHING) AUTO BOX WASHING + DRYING MACHINE- GENERATION III",1.0,"SET",608850000,638550000,0.0682,653400000,"","X",null,"PT. JINWOO MEGA KARYA","DO","",""],["공무","PT. CHANGSHIN REKSA JAYA","CRJ","2026.09","2026-09-02","4501165879","KUKDONG","INSPECTION CONVEYOR L5.000 (PVC BELT W800)",3.0,"SET",48360000,51987000,0.0698,155961000,"2026-09-05","",3.0,"KUKDONG PERDANA MULIA. PT","DO","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.09","2026-09-07","4501168272","KAS","AI VISION QC EQUIPMENT - H/W FABRICATION (STITCHING INSPECTION MACHINE)",1.0,"SET",0,265687500,1.0,265687500,"","X",null,"","","",""],["공무","PT. CHANG SHIN INDONESIA","CSI","2026.09","2026-09-12","4501171184","KUKDONG","DRY (NIR+HEATING BLOWER) ASSEMBLY CHAMBER (1/2*1.0M)",38.0,"SET",58533000,66282900,0.1169,2518750200,"","X",null,"KD SOLUTIONS CO.. LTD","KOREA","",""]], RFQ=[["비관계사","PT. OUTDOOR FOOTWEAR NETWORK","PT. OUTDOOR FOOTWEAR NETWORKS","2025.11","OFN - 5016","","LAMPU SEWING MACHINE LED LIGHT MAGNETIC A-1 CRIPTON",1.0,"EA","CRIPTON MAJU GEMILANG, PT",89000,89000,103500,103500,0.1629,"","","IDR"],["비관계사","PT. KUM KANG TECH INDONESIA","PT. KUM KANG TECH INDONESIA","2026.04","KKM - 4770","ECO LASER","LASER MACHINE CLEANER / ECO LASER / V-100LC",1.0,"UNT","ECO LASER CO., LTD",425100000,425100000,552630000,552630000,0.3,"","","USD"],["비관계사","PT. KUM KANG TECH INDONESIA","PT. KUM KANG TECH INDONESIA","2026.04","KKM - 4770","ECO LASER","LASER MACHINE CLEANER / ECO LASER / V-200LC",1.0,"UNT","ECO LASER CO., LTD",555900000,555900000,722670000,722670000,0.3,"","","USD"],["비관계사","PT. KUM KANG TECH INDONESIA","PT. KUM KANG TECH INDONESIA","2026.04","KKM - 4770","ECO LASER","LASER MACHINE CLEANER / ECO LASER / V-300LC",1.0,"UNT","ECO LASER CO., LTD",654000000,654000000,850200000,850200000,0.3,"","","USD"],["비관계사","Ministry of Culture Magelang","Ministry of Culture Magelang","2026.04","MOC - 5000","ECO LASER","LASER MACHINE CLEANER V - 100BP",1.0,"UNT","ECO LASER CO., LTD",425100000,425100000,552630000,552630000,0.3,"","","USD"],["비관계사","Ministry of Culture Magelang","Ministry of Culture Magelang","2026.04","MOC - 5000","ECO LASER","LASER MACHINE CLEANER V - 200BP",1.0,"UNT","ECO LASER CO., LTD",555900000,555900000,722670000,722670000,0.3,"","","USD"],["비관계사","Ministry of Culture Magelang","Ministry of Culture Magelang","2026.04","MOC - 5000","ECO LASER","LASER MACHINE CLEANER V - 300BP",1.0,"UNT","ECO LASER CO., LTD",654000000,654000000,850200000,850200000,0.3,"","","USD"],["비관계사","Ministry of Culture Magelang","Ministry of Culture Magelang","2026.04","MOC - 5000","ECO LASER","LASER MACHINE CLEANER / ECO LASER / V-200LC",1.0,"UNT","ECO LASER CO., LTD",555900000,555900000,722670000,722670000,0.3,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","JYL-120 / FLAT 1-NEEDLE",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",6376500,6376500,9810000,9810000,0.5385,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","JYL-L5845E / FLAT 2-NEEDLE",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",17658000,17658000,24525000,24525000,0.3889,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","JYL-T3-1C / 1-NEEDLE POSTER",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",13112700,13112700,16350000,16350000,0.2469,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","JYL-T5-2C (BELT TYPE 650W) / 2-NEEDLE POSTER (BELT MOTOR 650W)",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",25898400,25898400,34335000,34335000,0.3258,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","JYL-1530BFT-CO / ZIGZAG (FLAT BED)",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",11445000,11445000,16350000,16350000,0.4286,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","JYL-435 / ZIGZAG+BINDING (CYLINDER BED)",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",17167500,17167500,22890000,22890000,0.3333,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","JYL-05 / OVERLOCK+3 NEEDLE",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",7194000,7194000,9810000,9810000,0.3636,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","JYL-801 / SKIVING / SPLITTING + BELT MOTOR",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",6997800,6997800,10300500,10300500,0.472,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","JYL-801-C / SKIVING / SPLITTING + BELT MOTOR + DUCT",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",15532500,15532500,21255000,21255000,0.3684,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","JYL-801-D / DIRECT DRIVE MOTOR + DUCT",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",18312000,18312000,24525000,24525000,0.3393,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","JYL-SD01 / SURGE 4 NEEDLE",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",19293000,19293000,24525000,24525000,0.2712,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","JYL-I600F / SURGE 4 NEEDLE",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",19293000,19293000,26160000,26160000,0.3559,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","COMPUTER STITCHING 1510",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",76027500,76027500,83385000,83385000,0.0968,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","COMPUTER STITCHING 3020 (1 NEEDLE)",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",124260000,124260000,163500000,163500000,0.3158,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5002","JYL","COMPUTER STITCHING 6040",1.0,"SET","Guangdong Jin Yue Lai Automation Equipment CO., LTD",152055000,152055000,228900000,228900000,0.5054,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5005","EMMA","VISUALIZED AUTO CUTTING MACHING / C-906",1.0,"SET","Dongguan Emma CNC Technology CO., LTD",261600000,261600000,313920000,313920000,0.2,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5005","EMMA","SMART CUTTING MACHINE / L2-2216",1.0,"SET","Dongguan Emma CNC Technology CO., LTD",784800000,784800000,941760000,941760000,0.2,"","","USD"],["비관계사","Y-C TEC INDONESIA, PT","Y-C TEC INDONESIA, PT","2026.04","YC - 5005","EMMA","AUTOMATIC CUTTING MACHINE / C-2510",1.0,"SET","Dongguan Emma CNC Technology CO., LTD",572250000,572250000,686700000,686700000,0.2,"","","USD"],["비관계사","PT. YUSUNG ADVANCE INDONESIA","PT. YUSUNG ADVANCED INDONESIA","2026.04","YUSUNG - 5011","JHL","SMALL CUTTING BOARD XH-0681",1.0,"UNT","PT JINHAILI INTERNATIONAL INDONESIA",202821750,202821750,217013550,217013550,0.07,"","","USD"],["비관계사","PT. YUSUNG ADVANCE INDONESIA","PT. YUSUNG ADVANCED INDONESIA","2026.05","YUSUNG - 5015","JHL","METAL DETECTOR MACHINE ADZ-720/6016L",1.0,"SET","PT JINHAILI INTERNATIONAL INDONESIA",51208200,51208200,57355800,57355800,0.1201,"","","USD"],["비관계사","PT. PUNGKOOK INDONESIA ONE","PT. PUNGKOOK INDONESIA ONE","2026.03","PUNGKOOK - 0377","","SEWING MACHINE LED LIGHT 10 TITIK",1.0,"PCS","PT. LYS SUPLINDO PRATAMA",32000,32000,34000,34000,0.0625,"","","IDR"],["비관계사","PT. PUNGKOOK INDONESIA ONE","PT. PUNGKOOK INDONESIA ONE","2026.03","PUNGKOOK - 0377","","SEWING MACHINE LED LIGHT 10 TITIK",1.0,"PCS","PT. PUTRA PERDANA SENTOSA",55000,55000,58000,58000,0.0545,"","","IDR"],["비관계사","JYL INDONESIA","JIN YUE LAI INDONESIA","2026.05","JYL INA - 0720","","JYL-T52C DOUBLE NEEDLE POST-BED SEWING MACHINE JYL",50.0,"SET","GUANGDONG JIN YUE LAI AUTOMATION EQUIPMENT CO., LTD.",1584,79200,2100,105000,0.3258,"","","IDR"],["공무","PT. CHANG SHIN INDONESIA","JJ","2026.04","MESIN SHREDDER","","MESIN SHREDDER PLASTIK DOUBLE STATIS",1.0,"SETT","MADANITEC",32000000,32000000,34400000,34400000,0.0698,"","",""],["공무","PT. CHANG SHIN INDONESIA","JJ","2026.04","MESIN SHREDDER","","MESIN SHREDDER PLASTIK KAIN DINAMO 2HP",1.0,"SETT","MADANITEC",12300000,12300000,13222500,13222500,0.0698,"","",""],["공무","PT. CHANG SHIN INDONESIA","JJ","2026.06","MESIN PENCACAH PLASTIK KLARI","NO BRAND","MESIN Cacah Plastik Jumlah pisau : 3 pisau gerak dan 2 pisau diam Ukuran pisau : 20x11 cm Tebal plat dinding: 3mm Dimensi : 97x86x158cm Ukuran sarangan: 24x 38cm Lubang sarangan: 15- 16mm Rekomendasi Penggerak : Diesel R180 / 8 PK Dinamo : Jiang Fa 8H",1.0,"SET","PT FORTUNA GLOBAL TEKNO",16000000,16000000,17200000,17200000,0.0698,"","",""],["공무","PT. CHANG SHIN INDONESIA - CKP","CKP","2026.07","AIR COOLER CKP","","AIR COOLED CHILLER 100RT 2 COMP",1.0,"EA","PT BUMYANG",1828800000,1828800000,1965960000,1965960000,0.0698,"","",""],["공무","PT. CHANG SHIN INDONESIA - CKP","CKP","2026.07","SHANCIN CKP","SHANCIN","SHANCIN MESIN POWER SPRAYER SCN 30 DAN DINAMO TEMBAGA",1.0,"EA","PT PUTRA PERDANA SENTOSA",5650000,5650000,5900000,5900000,0.0424,"","",""],["공무","PT. CHANG SHIN INDONESIA - CKP","CKP","2026.07","AR COOLEN","","AIR COLLED CHILLER TGF6-150W-5S35 COLING CAPACITY 387000 KCAL/H POWER INPUT:112.5/KW MAX RUNNING CURRENT:160A",1.0,"UNIT","PT JINHAILI INTERNATIONAL INDONESIA",1087500000,1087500000,1169000000,1169000000,0.0697,"","",""],["공무","PT. CHANG SHIN INDONESIA - CKP","CKP","2026.07","AR COOLEN","","AIR COOLED CHILLER 100RT 2 COMP",1.0,"UNIT","PT BUMYANG",1848800000,1848800000,1987460000,1987460000,0.0698,"","",""],["공무","PT. CHANGSHIN REKSA JAYA","JJ2","2026.05","ENG SPP - 000 JYL SEWING MACHINE JJ2","","JYL-T3-1C SINGLE NEEDLE POST - BED SEWING MACHINE",1.0,"SET","GUANGDONG JYL",830,830,970,970,0.1443,"","",""],["공무","PT. CHANGSHIN REKSA JAYA","JJ2","2026.05","ENG SPP - 000 JYL SEWING MACHINE JJ2","","JYL-T5-2C DOUBLE NEEDLE POST - BED SEWING MACHINE",1.0,"SET","GUANGDONG JYL",1584,1584,2037,2037,0.2224,"","",""],["공무","PT. CHANGSHIN REKSA JAYA","JJ2","2026.06","ENG SPP - 000 MACHINE JYL-B6040G-CS JJ2","","COMPUTER STITCHING MACHINE JYL-B6040G-CS",11.0,"SET","GUANGDONG JYL",9300,102300,14000,154000,0.3357,"","",""]], ASOF='2026-09-17';
+let LANG='ko', SRC='all', DLV='all', PMODE='po', CHB='all';
+const uC=v=>{const u=(v||0)/RATE;if(Math.abs(u)>=1e6)return '$'+(u/1e6).toFixed(2)+'M';if(Math.abs(u)>=1e3)return '$'+(u/1e3).toFixed(1)+'K';return '$'+Math.round(u);};
+const uF=v=>'$'+Math.round((v||0)/RATE).toLocaleString('en-US');  /* 상단 KPI 카드 1달러 단위 full 표기 */
+const rp=v=>{v=v||0;if(Math.abs(v)>=1e9)return 'Rp '+(v/1e9).toFixed(2)+'B';if(Math.abs(v)>=1e6)return 'Rp '+(v/1e6).toFixed(1)+'M';return 'Rp '+Math.round(v).toLocaleString('en-US');};
+const nf=n=>Math.round(n||0).toLocaleString('en-US');
+const esc=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const q1=s=>(s||'').replace(/'/g,"");
+const T=(ko,en)=>LANG==='ko'?ko:en;
+const cmonth=r=>r[14]?r[14].slice(0,7).replace('-','.'):'';
+const monthOf=r=>PMODE==='po'?r[3]:cmonth(r);
+function mv(v){if(v==null)return '-';return `<span class="mcell"><b>$${nf(Math.round((v||0)/RATE))}</b><span>Rp ${nf(Math.round(v||0))}</span></span>`;}
+function costTot(r){return r[12]!=null?Math.round(r[13]*(1-r[12])):(r[10]!=null?Math.round(r[10]*(r[8]||0)):null);}
+const abbr=s=>{const t=(s||'').trim().split(/\s+/);if(t[0]&&/^(PT|CV|UD|PD|FA)[.,]?$/i.test(t[0]))return t[0].replace(/[.,]/g,'').toUpperCase()+'.'+(t[1]||'');return t.slice(0,2).join(' ');};
+function curPO(){return SRC==='all'?PO:PO.filter(r=>r[0]===SRC);}
+function curRFQ(){return SRC==='all'?RFQ:RFQ.filter(r=>r[0]===SRC);}
+function setLang(l){LANG=l;document.getElementById('lko').classList.toggle('on',l==='ko');document.getElementById('len').classList.toggle('on',l==='en');render();}
+function setSrc(s){SRC=s;render();}
+function setDlv(d){DLV=d;renderPO();}
+function srcTag(s){return `<span class="tag ${s==='공무'?'t2':'t1'}">${s==='공무'?T('공무','MEP'):T('비관계사','NR')}</span>`;}
+function poStat(r){if(r[14])return `<span class="dv">✔ ${T('납품완료','Delivered')} ${r[14]}</span>`;if(r[15]==='X')return `<span class="nd">${T('미납품','Undeliv')}${r[16]!=null?' ('+r[16]+T('일','d')+')':''}</span>`;if(r[19])return `<span class="pg">${esc(r[19])}</span>`;return `<span class="pg">${T('확인필요','Check')}</span>`;}
+let chart=null,_moPOd={},_moDLd={};
+function renderCards(){
+ const P=curPO().filter(r=>POM==='all'||monthOf(r)===POM);
+ const R=(PMODE==='po')?curRFQ().filter(r=>POM==='all'||r[3]===POM):curRFQ();
+ const custs=new Set(P.map(r=>r[1]));
+ const poAmt=P.reduce((s,r)=>s+r[13],0);
+ const dl=P.filter(r=>r[14]); const delivAmt=dl.reduce((s,r)=>s+r[13],0);
+ const und=P.filter(r=>r[15]==='X').length;
+ const qty=P.reduce((s,r)=>s+(r[8]||0),0);
+ const submitAmt=R.reduce((s,r)=>s+(r[13]||0),0);
+ const basisLbl=PMODE==='po'?T('PO접수월 기준','By PO month'):T('납품월 기준','By delivery month');
+ const periodLbl=(POM==='all'?T('누계(전체 대상월)','Cumulative (all months)'):POM)+' · '+basisLbl;
+ const cards=[
+  [T('기계 PO 아이템수','Machine PO items'),nf(P.length),T('총 수량 '+nf(qty),'qty '+nf(qty))],
+  [T('거래 고객사','Customers'),nf(custs.size),T('개사','cos')],
+  [T('PO 접수금액','PO intake'),uF(poAmt),rp(poAmt)],
+  [T('납품완료 매출','Delivered'),uF(delivAmt),T(nf(dl.length)+'건 · '+rp(delivAmt),nf(dl.length)+' · '+rp(delivAmt))],
+  [T('미납품(DCI=X)','Undelivered'),nf(und),T('건','cs')],
+  [T('견적(RFQ) 제안금액','RFQ submit'),uF(submitAmt),T(nf(R.length)+'건','#'+nf(R.length))]];
+ document.getElementById('cards').innerHTML='<div style="grid-column:1/-1;font-size:11.5px;color:#7a80a0;font-weight:700;margin:-3px 0 2px">'+T('대상 기간','Period')+': '+esc(periodLbl)+'</div>'+cards.map(c=>`<div><div class="l">${c[0]}</div><div class="v">${c[1]}<small>${c[2]}</small></div></div>`).join('');
+}
+function render(){
+ document.getElementById('ttl').textContent=T('SHI 기계(MACHINE) 통합 현황 대시보드','SHI Machine — Consolidated Dashboard');
+ document.getElementById('sub').textContent=T('기준일 '+ASOF+'  ·  비관계사 + 공무(MEP) 통합  ·  Category = MACHINERY','As of '+ASOF+'  ·  Non-related + MEP  ·  Category = MACHINERY');
+ const sb=[['all',T('전체','All')],['비관계사',T('비관계사','Non-related')],['공무',T('공무(MEP)','MEP')]];
+ document.getElementById('srcbar').innerHTML='<div class="seg">'+sb.map(([v,t])=>`<button class="${SRC===v?'on':''}" onclick="setSrc('${v}')">${t}</button>`).join('')+'</div>';
+ const P=curPO();
+ renderCards();
+ renderPO();
+ // monthly chart + external tooltip data
+ document.getElementById('h_mon').textContent=T('■ 월별 PO접수 · 납품 추이 (USD)','■ Monthly PO · Delivered (USD)');
+ document.getElementById('pn_mon').textContent=T('막대=PO접수(발행월), 선=납품완료(마감월). 브랜드 선택 시 해당 브랜드만 필터링. 그래프에 마우스를 올리면 고객사·브랜드별 세부','Bar=PO(issue month), Line=Delivered(closing month). Filter by brand via dropdown. Hover for detail');
+ const brandCounts={};for(const r of P){const b=r[6]||T('브랜드없음','No Brand');brandCounts[b]=(brandCounts[b]||0)+1;}
+ const brandOpts=Object.keys(brandCounts).sort((a,b)=>brandCounts[b]-brandCounts[a]);
+ if(CHB!=='all'&&!brandOpts.includes(CHB))CHB='all';
+ document.getElementById('chartCtrl').innerHTML='<div style="font-size:12px;font-weight:700;color:#5a607a;margin-bottom:5px">'+T('브랜드별 현황','By brand')+'</div>'
+   +'<select onchange="setChartBrand(this.value)" style="border:1.5px solid #dfe2ee;border-radius:8px;padding:7px 10px;font-size:12.5px;font-family:inherit;color:#20233a;background:#fff;max-width:260px">'
+   +'<option value="all"'+(CHB==='all'?' selected':'')+'>'+T('전체 브랜드','All brands')+'</option>'
+   +brandOpts.map(b=>`<option value="${esc(b)}"${CHB===b?' selected':''}>${esc(b)} (${brandCounts[b]})</option>`).join('')+'</select>';
+ renderChart();
+ // brand table (clickable)
+ document.getElementById('h_brand').textContent=T('■ 브랜드별  (클릭 → 상세)','■ By brand  (click for detail)');
+ const bg={};for(const r of P){const b=r[6]||'No Brand';(bg[b]=bg[b]||{n:0,q:0,a:0,d:0});bg[b].n++;bg[b].q+=r[8]||0;bg[b].a+=r[13];if(r[14])bg[b].d+=r[13];}
+ const brows=Object.entries(bg).sort((x,y)=>y[1].a-x[1].a);
+ document.getElementById('brandtab').innerHTML='<thead><tr><th>'+T('브랜드','Brand')+'</th><th class="r">'+T('건','n')+'</th><th class="r">'+T('수량','Qty')+'</th><th class="r">'+T('PO금액','PO')+'</th><th class="r">'+T('납품','Deliv')+'</th></tr></thead><tbody>'+brows.map(([b,v])=>`<tr><td><span class="lk" onclick="openBrand('${q1(esc(b))}')">${esc(b)}</span></td><td class="r">${nf(v.n)}</td><td class="r">${nf(v.q)}</td><td class="r">${uC(v.a)}</td><td class="r">${uC(v.d)}</td></tr>`).join('')+'</tbody>';
+ // customer table (clickable)
+ document.getElementById('h_cust').textContent=T('■ 고객사별  (클릭 → 상세)','■ By customer  (click for detail)');
+ const cg={};for(const r of P){(cg[r[1]]=cg[r[1]]||{n:0,a:0,d:0});cg[r[1]].n++;cg[r[1]].a+=r[13];if(r[14])cg[r[1]].d+=r[13];}
+ const crows=Object.entries(cg).sort((x,y)=>y[1].a-x[1].a);
+ document.getElementById('custtab').innerHTML='<thead><tr><th>'+T('고객사','Customer')+'</th><th class="r">'+T('건','n')+'</th><th class="r">'+T('PO금액','PO')+'</th><th class="r">'+T('납품','Deliv')+'</th></tr></thead><tbody>'+crows.map(([c,v])=>`<tr><td class="nmw"><span class="lk" onclick="openCust('${q1(esc(c))}')">${esc(c)}</span></td><td class="r">${nf(v.n)}</td><td class="r">${uC(v.a)}</td><td class="r">${uC(v.d)}</td></tr>`).join('')+'</tbody>';
+ renderRFQ();
+}
+function setChartBrand(b){CHB=b;renderChart();}
+function renderChart(){
+ const full=curPO();
+ const P=CHB==='all'?full:full.filter(r=>(r[6]||T('브랜드없음','No Brand'))===CHB);
+ const mset=[...new Set(full.map(r=>r[3]).filter(Boolean).concat(full.map(cmonth).filter(Boolean)))].sort();
+ const poBy={},dlBy={},pd={},dd={};
+ const addD=(map,m,c,b,a)=>{const k=c+'|'+(b||'-');(map[m]=map[m]||{});(map[m][k]=map[m][k]||{c,b:b||'-',a:0}).a+=a;};
+ for(const r of P){if(r[3]){poBy[r[3]]=(poBy[r[3]]||0)+r[13];addD(pd,r[3],r[1],r[6],r[13]);}if(r[14]){const m=cmonth(r);dlBy[m]=(dlBy[m]||0)+r[13];addD(dd,m,r[1],r[6],r[13]);}}
+ _moPOd={};_moDLd={};for(const m in pd)_moPOd[m]=Object.values(pd[m]).sort((x,y)=>y.a-x.a);for(const m in dd)_moDLd[m]=Object.values(dd[m]).sort((x,y)=>y.a-x.a);
+ try{if(chart){chart.destroy();chart=null;}if(typeof Chart!=='undefined'&&mset.length)chart=new Chart(document.getElementById('chart'),{data:{labels:mset,datasets:[
+   {type:'bar',label:T('PO접수','PO'),data:mset.map(m=>Math.round((poBy[m]||0)/RATE)),backgroundColor:'#8aa4cf'},
+   {type:'line',label:T('납품완료','Delivered'),data:mset.map(m=>Math.round((dlBy[m]||0)/RATE)),borderColor:'#1c8b52',backgroundColor:'#1c8b52',tension:.2,borderWidth:2,pointRadius:3}]},
+   options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{font:{size:12},usePointStyle:true}},tooltip:{enabled:false,external:extTip}},scales:{y:{ticks:{callback:v=>'$'+nf(v)}}}}});}catch(e){document.getElementById('chart').parentElement.innerHTML='<div style="color:#9298b5;padding:30px;text-align:center;font-size:13px">'+T('차트를 표시할 수 없습니다','Chart unavailable')+'</div>';}
+}
+function extTip(ctx){const{chart,tooltip}=ctx;let el=document.getElementById('chtt');if(!el){el=document.createElement('div');el.id='chtt';document.body.appendChild(el);}
+ if(tooltip.opacity===0){el.style.opacity=0;return;}
+ const m=tooltip.title&&tooltip.title[0];const po=_moPOd[m]||[],dl=_moDLd[m]||[];
+ const poT=po.reduce((s,x)=>s+x.a,0),dlT=dl.reduce((s,x)=>s+x.a,0);
+ const line=x=>`<div style="padding-left:9px">${esc(abbr(x.c))} · ${esc(x.b)} &nbsp;<b>${uC(x.a)}</b></div>`;
+ let h=`<div style="font-weight:700;font-size:12.5px;margin-bottom:4px">${m}</div>`;
+ h+=`<div style="color:#9db8e6;font-weight:700">■ ${T('PO접수','PO intake')} ${uC(poT)}</div>`+(po.length?po.map(line).join(''):'<div style="padding-left:9px;color:#9aa3b8">-</div>');
+ h+=`<div style="color:#7fd6a4;font-weight:700;margin-top:5px">■ ${T('납품완료 매출','Delivered')} ${uC(dlT)}</div>`+(dl.length?dl.map(line).join(''):'<div style="padding-left:9px;color:#9aa3b8">-</div>');
+ el.innerHTML=h;
+ const r=chart.canvas.getBoundingClientRect();el.style.opacity=1;
+ let left=r.left+window.scrollX+tooltip.caretX+14;const w=el.offsetWidth;
+ if(tooltip.caretX+14+w>chart.width)left=r.left+window.scrollX+tooltip.caretX-w-14;
+ el.style.left=left+'px';el.style.top=(r.top+window.scrollY+12)+'px';
+}
+function moneyCols(){return '';}
+let POM='all';
+function setPOM(m){POM=m;renderCards();renderPO();}
+function setPMode(m){if(m!==PMODE){PMODE=m;POM='all';}renderCards();renderPO();}
+function renderPO(){
+ document.getElementById('h_po').textContent=T('■ 기계 거래·납품 현황 (PO)','■ Machine orders & delivery (PO)');
+ document.getElementById('pn_po').textContent=PMODE==='po'
+   ?T('실제 고객 PO 발행 건. PO접수월 기준 월탭으로 드릴다운. 금액=$ 좌측·Rp 우측 정렬.','Actual customer POs by PO issue month. Drill down by month.')
+   :T('실제 고객 PO 발행 건. 납품(마감)월 기준 월탭으로 드릴다운 — 해당월에 매출인식된 납품 건. 금액=$ 좌측·Rp 우측 정렬.','Actual customer POs by delivery month — revenue recognized that month.');
+ const allP=curPO();
+ const months=[...new Set(allP.map(monthOf).filter(Boolean))].sort();
+ const modeSeg='<div style="display:inline-flex;align-items:center;gap:8px;background:#fff6e6;border:1.5px solid #eecb8a;border-radius:11px;padding:5px 9px 5px 12px;margin:0 0 10px">'
+   +'<span style="font-size:11.5px;font-weight:800;color:#9a7418;letter-spacing:.2px">'+T('기준','Basis')+'</span>'
+   +'<div class="seg" style="margin:0;border-color:#eecb8a">'
+   +`<button style="${PMODE==='po'?'background:#1F3864;color:#fff;font-weight:700':'background:#fff;color:#1F3864'}" onclick="setPMode('po')">${T('PO접수월 기준','By PO month')}</button>`
+   +`<button style="${PMODE==='deliv'?'background:#5FA98C;color:#fff;font-weight:700':'background:#fff;color:#1c8b52'}" onclick="setPMode('deliv')">${T('납품월 기준','By delivery month')}</button>`
+   +'</div></div>';
+ document.getElementById('pomtab').innerHTML=modeSeg+'<div class="seg" style="flex-wrap:wrap;margin:0">'+[['all',T('전체 대상월','All')]].concat(months.map(m=>[m,m])).map(([v,t])=>`<button class="${POM===v?'on':''}" onclick="setPOM('${v}')">${t}</button>`).join('')+'</div>';
+ const dl=[['all',T('전체','All')],['deliv',T('납품완료','Delivered')],['undeliv',T('미납품','Undeliv')]];
+ document.getElementById('dlvbar').innerHTML='<span class="seg" style="margin:0">'+dl.map(([v,t])=>`<button class="${DLV===v?'on':''}" onclick="setDlv('${v}')">${t}</button>`).join('')+'</span>';
+ let P=allP.filter(r=>(POM==='all'||monthOf(r)===POM)&&(DLV==='all'||(DLV==='deliv'&&r[14])||(DLV==='undeliv'&&r[15]==='X')));
+ P=P.slice().sort((a,b)=>(b[4]||'').localeCompare(a[4]||''));
+ const H=[[T('출처','Src'),0],[T('고객사','Customer'),0],[T('공급사','Supplier'),0],[T('PO일자','PO date'),0],[T('PO번호','PO No.'),0],[T('브랜드','Brand'),0],[T('품목(모델)','Item'),0],[T('수량','Qty'),1],[T('단위','Unit'),0],[T('구매단가','Buy/u'),0],[T('구매총액','Buy total'),0],[T('판매단가','Sell/u'),0],[T('판매총액','Sell total'),0],[T('마진율','Margin'),1],[T('진행상태','Status'),0]];
+ let h='<thead><tr>'+H.map(([t,r])=>`<th${r?' class="r"':''}>${t}</th>`).join('')+'</tr></thead><tbody>';
+ let tq=0,tc=0,ta=0,td=0;
+ for(const r of P){const ct=costTot(r);tq+=r[8]||0;tc+=ct||0;ta+=r[13];if(r[14])td+=r[13];
+  const mg=r[12]==null?'-':`<span class="${r[12]>=0?'mg-pos':'mg-neg'}">${(r[12]*100).toFixed(1)}%</span>`;
+  h+=`<tr><td>${srcTag(r[0])}</td><td class="nmw">${esc(r[1])}</td><td class="nmw">${esc(r[17])||'-'}</td><td>${r[4]||'-'}</td><td>${esc(r[5])}</td><td>${esc(r[6])}</td><td class="nmw">${esc(r[7])}</td><td class="r">${nf(r[8])}</td><td>${esc(r[9])}</td><td>${mv(r[10])}</td><td>${mv(ct)}</td><td>${mv(r[11])}</td><td>${mv(r[13])}</td><td class="r">${mg}</td><td>${poStat(r)}</td></tr>`;}
+ const tm=ta>0?(ta-tc)/ta:null;
+ h+=`<tr class="mtot"><td colspan="7">${T('합계','TOTAL')} (${P.length})</td><td class="r">${nf(tq)}</td><td></td><td></td><td>${mv(tc)}</td><td></td><td>${mv(ta)}</td><td class="r">${tm==null?'-':(tm*100).toFixed(1)+'%'}</td><td>${T('납품','dlv')} ${uC(td)}</td></tr>`;
+ document.getElementById('potab').innerHTML=h+'</tbody>';
+}
+function renderRFQ(){
+ const R=curRFQ().slice().sort((a,b)=>(b[3]||'').localeCompare(a[3]||''));
+ document.getElementById('h_rfq').textContent=T(`■ 기계 견적(RFQ) 현황 (${R.length}건) - PO 미 접수 건`,`■ Machine quotes (RFQ) (${R.length}) - Not yet ordered`);
+ document.getElementById('pn_rfq').textContent=T('공급사=구매예정처. 구매단가/총액=벤더견적, 판매단가/총액=SHI제안. ※ 원본에 RFQ↔PO 연결 거의 없어 PO/납품은 상단 거래보드 기준.','Supplier=vendor. Buy=vendor quote, Sell=SHI submit.');
+ const H=[[T('출처','Src'),0],[T('고객사','Customer'),0],[T('RFQ월','Month'),0],[T('공급사','Supplier'),0],[T('브랜드','Brand'),0],[T('품목','Item'),0],[T('수량','Qty'),1],[T('단위','Unit'),0],[T('구매단가','Buy/u'),0],[T('구매총액','Buy total'),0],[T('판매단가','Sell/u'),0],[T('판매총액','Sell total'),0],[T('마진율','Margin'),1],[T('견적상태','Quote'),0],[T('PO접수여부','PO'),0]];
+ let h='<thead><tr>'+H.map(([t,r])=>`<th${r?' class="r"':''}>${t}</th>`).join('')+'</tr></thead><tbody>';
+ let tq=0,tc=0,ts=0;
+ for(const r of R){tq+=r[7]||0;tc+=r[11]||0;ts+=r[13]||0;
+  const mg=r[14]==null?'-':`<span class="${r[14]>=0?'mg-pos':'mg-neg'}">${(r[14]*100).toFixed(1)}%</span>`;
+  const qs=r[15]==='X'?`<span class="nd">${T('미제출','Unsub')}</span>`:`<span class="dv">${T('제출','Submitted')}</span>`;
+  const ps=r[16]?`<span class="dv">${T('PO접수','PO issued')}</span>`:`<span class="nd">${T('PO미접수','No PO')}</span>`;
+  h+=`<tr><td>${srcTag(r[0])}</td><td class="nmw">${esc(r[1])}</td><td>${r[3]||'-'}</td><td class="nmw">${esc(r[9])||'-'}</td><td>${esc(r[5])}</td><td class="nmw">${esc(r[6])}</td><td class="r">${nf(r[7])}</td><td>${esc(r[8])}</td><td>${mv(r[10])}</td><td>${mv(r[11])}</td><td>${mv(r[12])}</td><td>${mv(r[13])}</td><td class="r">${mg}</td><td>${qs}</td><td>${ps}</td></tr>`;}
+ const tm=ts>0?(ts-tc)/ts:null;
+ h+=`<tr class="mtot"><td colspan="6">${T('합계','TOTAL')} (${R.length})</td><td class="r">${nf(tq)}</td><td></td><td></td><td>${mv(tc)}</td><td></td><td>${mv(ts)}</td><td class="r">${tm==null?'-':(tm*100).toFixed(1)+'%'}</td><td colspan="2"></td></tr>`;
+ document.getElementById('rfqtab').innerHTML=(R.length?h:'<tbody><tr><td style="color:#999;padding:16px">'+T('해당 없음','None')+'</td></tr>')+'</tbody>';
+}
+function _mapPO(r){return {src:r[0],cust:r[1],vendor:r[17],brand:r[6],desc:r[7],qty:r[8],unit:r[9],cu:r[10],ct:costTot(r),su:r[11],st:r[13],mg:r[12],status:poStat(r)};}
+function _mapRFQ(r){return {src:r[0],cust:r[1],vendor:r[9],brand:r[5],desc:r[6],qty:r[7],unit:r[8],cu:r[10],ct:r[11],su:r[12],st:r[13],mg:r[14],status:(r[16]?'<span class="dv">'+T('PO접수','PO')+'</span>':'<span class="nd">'+T('PO미접수','No PO')+'</span>')};}
+function _detTable(rows,stLabel){
+ if(!rows.length)return '<div style="color:#999;padding:8px">-</div>';
+ const H=[T('출처','Src'),T('고객사','Customer'),T('공급사','Supplier'),T('브랜드','Brand'),T('품목','Item'),T('수량','Qty'),T('단위','Unit'),T('구매단가','Buy/u'),T('구매총액','Buy tot'),T('판매단가','Sell/u'),T('판매총액','Sell tot'),T('마진율','Margin'),stLabel];
+ let h='<table><thead><tr>'+H.map((t,i)=>`<th${[5,11].includes(i)?' class="r"':''}>${t}</th>`).join('')+'</tr></thead><tbody>';
+ let tq=0,tc=0,ts=0;
+ for(const o of rows){tq+=o.qty||0;tc+=o.ct||0;ts+=o.st||0;
+  const mg=o.mg==null?'-':`<span class="${o.mg>=0?'mg-pos':'mg-neg'}">${(o.mg*100).toFixed(1)}%</span>`;
+  h+=`<tr><td>${srcTag(o.src)}</td><td class="nmw">${esc(o.cust)}</td><td class="nmw">${esc(o.vendor)||'-'}</td><td>${esc(o.brand)}</td><td class="nmw">${esc(o.desc)}</td><td class="r">${nf(o.qty)}</td><td>${esc(o.unit)}</td><td>${mv(o.cu)}</td><td>${mv(o.ct)}</td><td>${mv(o.su)}</td><td>${mv(o.st)}</td><td class="r">${mg}</td><td>${o.status}</td></tr>`;}
+ const tm=ts>0?(ts-tc)/ts:null;
+ h+=`<tr class="mtot"><td colspan="5">${T('합계','TOTAL')} (${rows.length})</td><td class="r">${nf(tq)}</td><td></td><td></td><td>${mv(tc)}</td><td></td><td>${mv(ts)}</td><td class="r">${tm==null?'-':(tm*100).toFixed(1)+'%'}</td><td></td></tr>`;
+ return h+'</tbody></table>';
+}
+function detailBody(P,R){return `<div style="font-weight:700;margin:4px 0 6px;color:#25406e">${T('■ 거래(PO)','■ Orders (PO)')} · ${P.length}</div><div class="tbwrap" style="max-height:300px">${_detTable(P.map(_mapPO),T('진행상태','Status'))}</div><div style="font-weight:700;margin:14px 0 6px;color:#8a63d2">${T('■ 견적(RFQ)','■ Quotes (RFQ)')} · ${R.length}</div><div class="tbwrap" style="max-height:300px">${_detTable(R.map(_mapRFQ),T('PO접수','PO'))}</div>`;}
+function openBrand(b){const P=curPO().filter(r=>(r[6]||'No Brand')===b),R=curRFQ().filter(r=>(r[5]||'No Brand')===b);showModal(T('브랜드','Brand')+' — '+esc(b),detailBody(P,R));}
+function openCust(c){const P=curPO().filter(r=>r[1]===c),R=curRFQ().filter(r=>r[1]===c);showModal(T('고객사','Customer')+' — '+esc(c),detailBody(P,R));}
+function showModal(t,h){document.getElementById('modalTitle').innerHTML=t;document.getElementById('mclose').textContent=T('닫기','Close');document.getElementById('modalBody').innerHTML=h;document.getElementById('modal').style.display='flex';}
+function closeModal(){document.getElementById('modal').style.display='none';}
+async function _xl(fname,title,heads,rows,numCols,colW,statId){
+ const st=document.getElementById(statId);const say=m=>{if(st)st.textContent=m;};
+ try{if(typeof ExcelJS==='undefined'){say(T('브라우저에서 열어 시도','Open in browser'));return;}say('...');
+  const wb=new ExcelJS.Workbook();const ws=wb.addWorksheet('machine');
+  ws.mergeCells(1,1,1,heads.length);const c1=ws.getCell(1,1);c1.value=title;c1.font={name:'Pretendard',bold:true,size:13};
+  const thin={style:'thin',color:{argb:'FFBFC6D4'}};const bd={top:thin,left:thin,right:thin,bottom:thin};
+  const hr=ws.getRow(3);heads.forEach((h,i)=>hr.getCell(i+1).value=h);
+  hr.eachCell(c=>{c.font={name:'Pretendard',bold:true,color:{argb:'FFFFFFFF'},size:11};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF12294C'}};c.alignment={horizontal:'center'};c.border=bd;});
+  let ri=4;for(const vals of rows){const row=ws.getRow(ri++);vals.forEach((v,i)=>{const c=row.getCell(i+1);c.value=v;c.font={name:'Pretendard',size:10.5};c.border=bd;if(numCols.includes(i+1))c.numFmt='#,##0';c.alignment={horizontal:numCols.includes(i+1)?'right':'left'};});}
+  (colW||[]).forEach((w,i)=>{if(ws.columns[i])ws.columns[i].width=w;});
+  const buf=await wb.xlsx.writeBuffer();const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),1500);
+  if(st)st.innerHTML=`<a href="${url}" download="${fname}" style="color:#12294c;font-weight:700">${T('⬇ 안되면 클릭','⬇ Click')}</a>`;
+ }catch(e){say('ERR: '+(e&&e.message||e));}}
+function xlPO(){const P=curPO();const rows=P.map(r=>{const ct=costTot(r);return [r[0],r[1],r[17],r[4],r[5],r[6],r[7],r[8],r[9],(r[10]!=null?Math.round(r[10]/RATE):null),(r[11]?Math.round(r[11]/RATE):null),(ct!=null?Math.round(ct/RATE):null),Math.round(r[13]/RATE),(ct!=null?Math.round(ct):null),Math.round(r[13]),(r[12]==null?null:+(r[12]*100).toFixed(1)),r[14]?('납품완료 '+r[14]):(r[15]==='X'?'미납품':(r[19]||'-'))];});
+ _xl('기계_거래내역.xlsx','기계(MACHINE) 거래내역 — 비관계사+공무',['출처','고객사','공급사','PO일자','PO번호','브랜드','품목','수량','단위','구매단가($)','판매단가($)','구매총액($)','판매총액($)','구매총액(Rp)','판매총액(Rp)','마진율%','진행상태'],rows,[8,10,11,12,13,14,15,16],[9,24,22,12,15,12,32,7,7,12,12,13,13,15,15,9,14],'xstat');}
+function xlRFQ(){const R=curRFQ();const rows=R.map(r=>[r[0],r[1],r[3],r[4],r[9],r[5],r[6],r[7],r[8],(r[10]?Math.round(r[10]/RATE):null),(r[11]?Math.round(r[11]/RATE):null),(r[12]?Math.round(r[12]/RATE):null),(r[13]?Math.round(r[13]/RATE):null),Math.round(r[11]||0),Math.round(r[13]||0),(r[14]==null?null:+(r[14]*100).toFixed(1)),r[15]==='X'?'미제출':'제출',r[16]?'PO접수':'PO미접수']);
+ _xl('기계_견적내역.xlsx','기계(MACHINE) 견적(RFQ)내역',['출처','고객사','RFQ월','RFQ번호','공급사','브랜드','품목','수량','단위','구매단가($)','구매총액($)','판매단가($)','판매총액($)','구매총액(Rp)','판매총액(Rp)','마진율%','견적상태','PO접수여부'],rows,[8,10,11,12,13,14,15,16],[9,24,10,14,20,12,34,7,7,12,13,12,13,15,15,9,10,12],'xstat2');}
+render();
+
+/* ============================================================
+   기계(MACHINE) 통합내역 Excel 다운로드 — 2026-09-17
+   전체 데이터(필터 무관) 기준, 4개 시트
+   ============================================================ */
+const _XT={style:'thin',color:{argb:'FFBFC6D4'}};
+const _XB={top:_XT,left:_XT,right:_XT,bottom:_XT};
+const _XN=new Intl.NumberFormat('en-US');
+const _u=v=>Math.round((v||0)/RATE);
+function _xSheet(wb,sp){
+ const ws=wb.addWorksheet(sp.name,{views:[{state:'frozen',ySplit:3}]});
+ ws.mergeCells(1,1,1,Math.max(1,sp.heads.length));
+ const c1=ws.getCell(1,1);c1.value=sp.title;
+ c1.font={name:'Pretendard',bold:true,size:13,color:{argb:'FF12294C'}};
+ c1.alignment={vertical:'middle'};ws.getRow(1).height=22;
+ const hr=ws.getRow(3);sp.heads.forEach((h,i)=>hr.getCell(i+1).value=h);hr.height=20;
+ hr.eachCell(c=>{c.font={name:'Pretendard',bold:true,color:{argb:'FFFFFFFF'},size:11};
+  c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF12294C'}};
+  c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.border=_XB;});
+ const num=sp.numCols||[],pct=sp.pctCols||[];
+ let ri=4;
+ const put=(vals,tot)=>{const row=ws.getRow(ri++);
+  vals.forEach((v,i)=>{const c=row.getCell(i+1);c.value=v;
+   c.font={name:'Pretendard',size:10.5,bold:!!tot,color:{argb:'FF1F2430'}};c.border=_XB;
+   if(pct.includes(i+1))c.numFmt='0.0"%"';else if(num.includes(i+1))c.numFmt='#,##0';
+   c.alignment={horizontal:(num.includes(i+1)||pct.includes(i+1))?'right':'left',vertical:'middle'};
+   if(tot)c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFD9E2F1'}};});};
+ if(sp.totalRow)put(sp.totalRow,true);
+ (sp.rows||[]).forEach(r=>put(r,false));
+ (sp.colW||[]).forEach((w,i)=>{if(ws.columns[i])ws.columns[i].width=w;});
+ if(sp.heads.length)ws.autoFilter={from:{row:3,column:1},to:{row:3,column:sp.heads.length}};
+}
+function _mPO(){
+ let tq=0,tc=0,ta=0;
+ const rows=PO.map(r=>{
+  const ct=(r[10]!=null&&r[8])?r[10]*r[8]:null;
+  tq+=r[8]||0;tc+=ct||0;ta+=r[13]||0;
+  return [r[0],r[1],r[2]||'',r[17]||'',r[18]||'',r[3]||'',r[4]||'',r[5]||'',r[6]||'',r[7]||'',
+   r[8],r[9]||'',(r[10]!=null?_u(r[10]):null),(r[11]?_u(r[11]):null),
+   (ct!=null?_u(ct):null),_u(r[13]),(ct!=null?Math.round(ct):null),Math.round(r[13]||0),
+   (r[12]==null?null:+(r[12]*100).toFixed(1)),
+   r[20]||'',
+   r[14]?'납품완료':(r[15]==='X'?'미납품':'진행중'),r[14]||'',
+   (r[16]!=null?r[16]:''),r[19]||''];});
+ return {name:'1.기계 PO 거래내역',
+  title:`기계(MACHINE) PO 거래내역 — 비관계사+공무 전체 (기준일 ${ASOF} · USD 1 = IDR ${_XN.format(RATE)} 사업계획환율)`,
+  heads:['출처','고객사','최종고객','공급사','원산지','PO월','PO일자','PO번호','브랜드','품목(모델)','수량','단위',
+         '구매단가($)','판매단가($)','구매총액($)','판매총액($)','구매총액(Rp)','판매총액(Rp)','마진율(%)',
+         '예상납기일','납품상태','DO마감일','납기L/T','비고'],
+  rows,numCols:[11,13,14,15,16,17,18,23],pctCols:[19],
+  totalRow:['TOTAL','전체','','','','','',`총 ${_XN.format(PO.length)}건`,'','',tq,'','',
+            '',_u(tc),_u(ta),Math.round(tc),Math.round(ta),
+            (ta?+(((ta-tc)/ta)*100).toFixed(1):0),'','','','',''],
+  colW:[9,26,22,20,11,9,12,16,13,34,9,7,13,13,14,14,16,16,10,13,11,12,9,22]};
+}
+function _mRFQ(){
+ let tq=0,tv=0,ts=0;
+ const rows=RFQ.map(r=>{tq+=r[7]||0;tv+=r[11]||0;ts+=r[13]||0;
+  return [r[0],r[1],r[2]||'',r[9]||'',r[3]||'',r[4]||'',r[5]||'',r[6]||'',r[7],r[8]||'',
+   (r[10]?_u(r[10]):null),(r[12]?_u(r[12]):null),(r[11]?_u(r[11]):null),(r[13]?_u(r[13]):null),
+   Math.round(r[11]||0),Math.round(r[13]||0),
+   (r[14]==null?null:+(r[14]*100).toFixed(1)),
+   r[15]==='X'?'미제출':'제출',r[16]?'PO접수':'PO미접수',r[16]||''];});
+ return {name:'2.기계 RFQ 견적내역',
+  title:`기계(MACHINE) 견적(RFQ) 내역 — 전체 (기준일 ${ASOF} · USD 1 = IDR ${_XN.format(RATE)} 사업계획환율)`,
+  heads:['출처','고객사','최종고객','공급사','RFQ월','RFQ번호','브랜드','품목','수량','단위',
+         '구매단가($)','판매단가($)','구매총액($)','제안총액($)','구매총액(Rp)','제안총액(Rp)',
+         '마진율(%)','견적상태','PO접수여부','PO번호'],
+  rows,numCols:[9,11,12,13,14,15,16],pctCols:[17],
+  totalRow:['TOTAL','전체','','','','','',`총 ${_XN.format(RFQ.length)}건`,tq,'','','',
+            _u(tv),_u(ts),Math.round(tv),Math.round(ts),
+            (ts?+(((ts-tv)/ts)*100).toFixed(1):0),'','',''],
+  colW:[9,26,22,20,10,15,13,34,9,7,13,13,14,14,16,16,10,10,12,15]};
+}
+function _mCust(){
+ const g={};
+ PO.forEach(r=>{const k=r[1]||'(미지정)';(g[k]=g[k]||{po:0,pa:0,dv:0,da:0,rq:0,ra:0,ct:0});
+  g[k].po++;g[k].pa+=r[13]||0;if(r[14]){g[k].dv++;g[k].da+=r[13]||0;}
+  if(r[10]!=null&&r[8])g[k].ct+=r[10]*r[8];});
+ RFQ.forEach(r=>{const k=r[1]||'(미지정)';(g[k]=g[k]||{po:0,pa:0,dv:0,da:0,rq:0,ra:0,ct:0});
+  g[k].rq++;g[k].ra+=r[13]||0;});
+ const ks=Object.keys(g).sort((a,b)=>g[b].pa-g[a].pa);
+ let T={po:0,pa:0,dv:0,da:0,rq:0,ra:0,ct:0};ks.forEach(k=>{for(const f in T)T[f]+=g[k][f];});
+ const rows=ks.map(k=>{const v=g[k];return [k,v.rq,Math.round(v.ra),_u(v.ra),v.po,Math.round(v.pa),_u(v.pa),
+   v.dv,Math.round(v.da),_u(v.da),(v.pa?+(((v.pa-v.ct)/v.pa)*100).toFixed(1):0)];});
+ return {name:'3.고객사별 요약',
+  title:`기계(MACHINE) 고객사별 요약 — 전체 (기준일 ${ASOF} · USD 1 = IDR ${_XN.format(RATE)} 사업계획환율)`,
+  heads:['고객사','RFQ건수','제안총액(Rp)','제안총액($)','PO건수','PO금액(Rp)','PO금액($)',
+         '납품완료건','납품금액(Rp)','납품금액($)','마진율(%)'],
+  rows,numCols:[2,3,4,5,6,7,8,9,10],pctCols:[11],
+  totalRow:['TOTAL',T.rq,Math.round(T.ra),_u(T.ra),T.po,Math.round(T.pa),_u(T.pa),
+            T.dv,Math.round(T.da),_u(T.da),
+            (T.pa?+(((T.pa-T.ct)/T.pa)*100).toFixed(1):0)],
+  colW:[30,10,17,14,10,17,14,12,17,14,10]};
+}
+function _mMonth(){
+ const g={};
+ PO.forEach(r=>{const m=r[3]||'(미지정)';(g[m]=g[m]||{po:0,pa:0,dv:0,da:0,rq:0,ra:0});
+  g[m].po++;g[m].pa+=r[13]||0;});
+ PO.forEach(r=>{if(!r[14])return;const m=String(r[14]).slice(0,7).replace('-','.');
+  (g[m]=g[m]||{po:0,pa:0,dv:0,da:0,rq:0,ra:0});g[m].dv++;g[m].da+=r[13]||0;});
+ RFQ.forEach(r=>{const m=r[3]||'(미지정)';(g[m]=g[m]||{po:0,pa:0,dv:0,da:0,rq:0,ra:0});
+  g[m].rq++;g[m].ra+=r[13]||0;});
+ const ks=Object.keys(g).sort();
+ let T={po:0,pa:0,dv:0,da:0,rq:0,ra:0};ks.forEach(k=>{for(const f in T)T[f]+=g[k][f];});
+ const rows=ks.map(k=>{const v=g[k];return [k,v.rq,Math.round(v.ra),_u(v.ra),v.po,Math.round(v.pa),_u(v.pa),
+   v.dv,Math.round(v.da),_u(v.da)];});
+ return {name:'4.월별 추이',
+  title:`기계(MACHINE) 월별 추이 — PO월 / DO마감월 기준 (기준일 ${ASOF} · USD 1 = IDR ${_XN.format(RATE)} 사업계획환율)`,
+  heads:['년월','RFQ건수','제안총액(Rp)','제안총액($)','PO건수','PO금액(Rp)','PO금액($)',
+         '납품완료건','납품금액(Rp)','납품금액($)'],
+  rows,numCols:[2,3,4,5,6,7,8,9,10],
+  totalRow:['TOTAL',T.rq,Math.round(T.ra),_u(T.ra),T.po,Math.round(T.pa),_u(T.pa),T.dv,Math.round(T.da),_u(T.da)],
+  colW:[12,10,17,14,10,17,14,12,17,14]};
+}
+async function xlALL(){
+ if(typeof ExcelJS==='undefined'){alert('엑셀 모듈을 불러오지 못했습니다 — 브라우저에서 페이지를 열어 시도하세요.');return;}
+ const btn=document.getElementById('xlAllBtn');const _t=btn?btn.textContent:'';
+ if(btn){btn.textContent='⏳ 생성 중...';btn.disabled=true;}
+ try{
+  const wb=new ExcelJS.Workbook();wb.creator='SHI Machine Monitoring';wb.created=new Date();
+  [_mPO(),_mRFQ(),_mCust(),_mMonth()].forEach(sp=>_xSheet(wb,sp));
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`SHI_기계_통합내역_${ASOF}.xlsx`;
+  document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),1500);
+ }catch(err){alert('엑셀 생성 중 오류: '+err.message);console.error(err);}
+ finally{if(btn){btn.textContent=_t;btn.disabled=false;}}
+}
+
+</script></body></html>
