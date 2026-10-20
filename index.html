@@ -484,20 +484,32 @@ function _wkBoard(pfx,KEY,labels){
  sel.innerHTML=ms.length?ms.map(m=>`<option>${m}</option>`).join(''):'<option>-</option>';
  if(prev&&ms.includes(prev))sel.value=prev;
  sel.onchange=()=>_wkRender(pfx,KEY,labels);_wkRender(pfx,KEY,labels);}
-function _wkCustRows(pfx,uid,list,en){
- if(!list||!list.length)return '';
+function _wkCustRows(pfx,uid,list,en,otherCum,otherCnt){
+ list=list||[];
+ if(!list.length&&!(otherCnt>0))return '';
  const tot=list.reduce((s,x)=>s+x.amt,0);
- return list.map(x=>{
+ let h=list.map(x=>{
    const sv=/SERVEONE/i.test(x.src||'')||/SERVEONE/i.test(x.cust||'');
    const tag=sv?`<span style="font-size:10px;color:#7E6BA8;border:1px solid #ded7ef;border-radius:3px;padding:0 4px;margin-left:5px">SVO</span>`
                :`<span style="font-size:10px;color:#5FA98C;border:1px solid #d6e9e0;border-radius:3px;padding:0 4px;margin-left:5px">${en?'NR':'비관'}</span>`;
    const mc=x.mac?`<span style="font-size:10px;color:#A6792E;margin-left:6px">${en?'machine':'기계'} ${uF(x.mac)}</span>`:'';
    const sh=tot?(x.amt/tot*100):0;
+   const cv=(x.__cum!=null?x.__cum:x.amt);
    return `<tr class="${pfx}d-${uid}" style="display:none;background:#fafbfc">`
      +`<td colspan="2" style="padding-left:22px;color:#334">· ${x.cust}${tag}${mc}</td>`
-     +`<td style="text-align:right;color:#556;font-size:11px">${nf.format(x.cnt)} ${en?'PO':'건'} / ${nf.format(x.items)} ${en?'items':'아이템'}</td>`
-     +`<td colspan="2" style="text-align:right;font-weight:600">${uF(x.amt)}</td>`
-     +`<td colspan="2" style="color:#8a93a0;font-size:11px">${sh.toFixed(1)}%<span class="barmeter" style="display:inline-block;width:54px;height:6px;margin-left:6px;vertical-align:middle;background:#e8ecf1;border-radius:3px"><i style="display:block;height:100%;border-radius:3px;width:${Math.min(100,sh)}%;background:#4E7CB0"></i></span></td></tr>`;}).join('');}
+     +`<td colspan="2" style="text-align:right;color:#556;font-size:11px">${nf.format(x.cnt)} ${en?'PO':'건'} / ${nf.format(x.items)} ${en?'items':'아이템'}</td>`
+     +`<td style="text-align:right;font-weight:600">${uF(x.amt)}</td>`
+     +`<td style="text-align:right;color:#3730a3;font-weight:600">${uF(cv)}</td>`
+     +`<td style="color:#8a93a0;font-size:11px">${sh.toFixed(1)}%<span class="barmeter" style="display:inline-block;width:54px;height:6px;margin-left:6px;vertical-align:middle;background:#e8ecf1;border-radius:3px"><i style="display:block;height:100%;border-radius:3px;width:${Math.min(100,sh)}%;background:#4E7CB0"></i></span></td></tr>`;}).join('');
+ if(otherCnt>0){
+   h+=`<tr class="${pfx}d-${uid}" style="display:none;background:#f1f4f8">`
+     +`<td colspan="2" style="padding-left:22px;color:#6b7280;font-style:italic">· ${en?'Others (no activity this week)':'기타 (금주 미실적)'} <span style="color:#9aa3af;font-size:11px">(${otherCnt}${en?' cos':'개사'})</span></td>`
+     +`<td colspan="2" style="text-align:right;color:#aab">-</td>`
+     +`<td style="text-align:right;color:#aab">-</td>`
+     +`<td style="text-align:right;color:#3730a3;font-weight:600">${uF(otherCum)}</td>`
+     +`<td style="color:#aab;font-size:11px">${en?'cumulative only':'누적만'}</td></tr>`;
+ }
+ return h;}
 function _wkRender(pfx,KEY,labels){
  const W=D[KEY]||{};const m=document.getElementById(pfx+'MonSel').value;const wp=W[m];const en=(LANG==='en');
  const H=en?['Week','Period','Non-related','SERVEONE',labels.totEn,'Cumulative','Remark (Machine)']
@@ -506,25 +518,30 @@ function _wkRender(pfx,KEY,labels){
  document.querySelector('#'+pfx+'tab thead').innerHTML='<tr>'+H.map((t,i)=>`<th style="${WD[i]?`width:${WD[i]}px;`:''}${AL[i]?`text-align:${AL[i]};`:''}">${t}</th>`).join('')+'</tr>';
  const tb=document.querySelector('#'+pfx+'tab tbody');
  if(!wp){tb.innerHTML=`<tr><td colspan="7" style="text-align:center;color:#999">${en?'No data':'데이터 없음'}</td></tr>`;return;}
- let cum=0;let h='';
+ let cum=0;const run={};let h='';
  wp.weeks.forEach((w,i)=>{cum+=w.tot;
+  const cl=(w.cust||[]);
+  cl.forEach(x=>{run[x.cust]=(run[x.cust]||0)+x.amt;x.__cum=run[x.cust];});
+  const wkset={};cl.forEach(x=>{wkset[x.cust]=1;});
+  let oCum=0,oCnt=0;for(const c in run){if(!wkset[c]){oCum+=run[c];oCnt++;}}
   const wl=en?`${w.mm}/W${w.wi}`:`${w.mm}월 ${w.wi}주차`;
   const curb=w.cur?(en?' <span style="color:#c2650a;font-weight:700">(this week)</span>':' <span style="color:#c2650a;font-weight:700">(금주)</span>'):'';
-  const n=(w.cust||[]).length;
-  const head=n?`<a class="lnk" onclick="_wkTog('${pfx}',${i},this)">▸ ${wl}</a><span style="color:#9aa3af;font-size:11px"> (${n}${en?' cust':'개사'})</span>`:wl;
+  const n=cl.length;
+  const head=(n||oCnt)?`<a class="lnk" onclick="_wkTog('${pfx}',${i},this)">▸ ${wl}</a><span style="color:#9aa3af;font-size:11px"> (${n}${en?' cust':'개사'})</span>`:wl;
   h+=`<tr${w.cur?' style="background:#fffbe6"':''}><td class="name">${head}${curb}</td><td style="color:#667">${w.range}</td>`
     +`<td style="text-align:right">${w.nrel?uF(w.nrel):'-'}</td><td style="text-align:right">${w.svo?uF(w.svo):'-'}</td>`
     +`<td style="text-align:right;font-weight:700">${w.tot?uF(w.tot):'-'}</td>`
     +`<td style="text-align:right;color:#3730a3;font-weight:700">${uF(cum)}</td>`
     +`<td style="font-size:11px">${_macTxt(w.mac)}</td></tr>`;
-  h+=_wkCustRows(pfx,i,w.cust,en);});
+  h+=_wkCustRows(pfx,i,cl,en,oCum,oCnt);});
  const t=wp.total;const tn=(t.cust||[]).length;
+ (t.cust||[]).forEach(x=>{x.__cum=x.amt;});
  const thead=tn?`<a class="lnk" style="color:#1F3864" onclick="_wkTog('${pfx}','T',this)">▸ ▣ ${m} ${en?'Total':'합계'}</a><span style="color:#6b7686;font-size:11px"> (${tn}${en?' cust':'개사'})</span>`:`▣ ${m} ${en?'Total':'합계'}`;
  h+=`<tr class="mtot" style="font-weight:700;background:#dbe4f0"><td class="name">${thead}</td><td>-</td>`
    +`<td style="text-align:right">${t.nrel?uF(t.nrel):'-'}</td><td style="text-align:right">${t.svo?uF(t.svo):'-'}</td>`
    +`<td style="text-align:right">${uF(t.tot)}</td><td style="text-align:right">${uF(t.tot)}</td>`
    +`<td style="font-size:11px">${_macTxt(t.mac)}</td></tr>`;
- h+=_wkCustRows(pfx,'T',t.cust,en);
+ h+=_wkCustRows(pfx,'T',t.cust,en,0,0);
  tb.innerHTML=h;}
 function _wkTog(pfx,i,el){
  const rs=document.querySelectorAll('.'+pfx+'d-'+i);if(!rs.length)return;
